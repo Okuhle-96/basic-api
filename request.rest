@@ -1,0 +1,9 @@
+GET http://localhost:4017/posts
+
+###
+POST http://localhost:4017/login
+Content-Type: application/json
+
+{
+    "username" : "Okuhle-96"
+}

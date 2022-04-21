@@ -1,10 +1,14 @@
 // add code in here to create an API with ExpressJS
+require('dotenv').config()
 const express = require('express');
 const app = express();
+const jwt = require('jsonwebtoken')
 const garments = require('./garments.json');
 
 // enable the static folder...
 app.use(express.static('public'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // import the dataset to be used here
 
@@ -17,7 +21,41 @@ const PORT = process.env.PORT || 4017;
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// create a login route here
+app.post('/login', (req, res) => {
+
+    const username = req.body.username
+    const user = {name : username}
+
+    const accessToken =  generateAccessToken(user);
+ 
+    res.json({ accessToken : accessToken})
+})
+
+// aunthaticate Tokens
+function auntheuticateToken(req, res, next){
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token == null) return res.sendStatus(401);
+     
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+        if(err) return res.sendStatus(403)
+        req.user = user
+        next();
+    })
+}
+
+// generate access token
+function generateAccessToken(user) {
+    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15s'});
+}
+
 // API routes to be added here
+app.get('/api/posts', auntheuticateToken, function(req, res){
+	res.json({ garments : garments})
+})
+
 app.get('/api/garments', function(req, res){
 
 	const gender = req.query.gender;
